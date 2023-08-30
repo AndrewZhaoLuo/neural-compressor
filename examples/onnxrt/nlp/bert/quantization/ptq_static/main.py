@@ -359,7 +359,7 @@ if __name__ == "__main__":
                                 task=args.task,
                                 model_type=args.model_type,
                                 dynamic_length=args.dynamic_length)
-    dataloader = DataLoader(framework='onnxruntime', dataset=dataset, batch_size=args.batch_size)
+    dataloader = DataLoader(framework='onnxrt_qdq', dataset=dataset, batch_size=args.batch_size)
     metric = ONNXRTGLUE(args.task)
 
     def eval_func(model):
@@ -402,13 +402,13 @@ if __name__ == "__main__":
         opt_options = FusionOptions("bert")
         opt_options.enable_embed_layer_norm = False
 
-        model_optimizer = optimizer.optimize_model(
-            args.model_path,
-            "bert",
-            num_heads=12,
-            hidden_size=768,
-            optimization_options=opt_options)
-        model = model_optimizer.model
+        # model_optimizer = optimizer.optimize_model(
+        #     args.model_path,
+        #     "bert",
+        #     num_heads=12,
+        #     hidden_size=768,
+        #     optimization_options=opt_options)
+        # model = model_optimizer.model
         
         # check the optimized model is valid
         try:
@@ -420,11 +420,17 @@ if __name__ == "__main__":
             model = onnx.load(args.model_path)
 
         from neural_compressor import quantization, PostTrainingQuantConfig
+        from neural_compressor.config import TuningCriterion, AccuracyCriterion
         config = PostTrainingQuantConfig(
             approach="static",
             quant_format=args.quant_format,
             calibration_sampling_size=[8, 16, 32],
-            recipes={"optypes_to_exclude_output_quant": ["MatMul", "Gemm", "Attention", "FusedGemm"]},
+            recipes={"optypes_to_exclude_output_quant": ["MatMul", "Gemm", "Attention", "FusedGemm"], "graph_optimization_level": "DISABLE_ALL"},
+            tuning_criterion=TuningCriterion(
+                timeout=0,
+                max_trials=1,
+            ),
+            accuracy_criterion=AccuracyCriterion(tolerable_loss=0.05)
         )
         q_model = quantization.fit(model, 
                                    config,
