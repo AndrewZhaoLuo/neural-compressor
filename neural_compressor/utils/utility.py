@@ -251,7 +251,7 @@ class CpuInfo(object):
                 self._bf16 = bool(eax & (1 << 5))
         self._sockets = self.get_number_of_sockets()
         self._cores = psutil.cpu_count(logical=False)
-        self._cores_per_socket = int(self._cores / self._sockets)
+        self._cores_per_socket = int(self._cores / self._sockets) if self._sockets != 0 else 1
 
     @property
     def bf16(self):
