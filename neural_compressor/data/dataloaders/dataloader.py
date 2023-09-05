@@ -78,19 +78,6 @@ class DataLoader(object):
             distributed (bool, optional): Set to ``True`` to support distributed computing.
                 Defaults to False.
         """
-        assert framework in (
-            "tensorflow",
-            "tensorflow_itex",
-            "keras",
-            "pytorch",
-            "pytorch_ipex",
-            "pytorch_fx",
-            "onnxruntime",
-            "onnxrt_qdqops",
-            "onnxrt_qlinearops",
-            "onnxrt_integerops",
-            "mxnet",
-        ), "framework support tensorflow pytorch mxnet onnxruntime"
         return DATALOADERS[framework](
             dataset=dataset,
             batch_size=batch_size,
